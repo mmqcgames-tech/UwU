@@ -89,23 +89,18 @@
       // 2. MÚSICA DE FONDO (Si lo dejas vacío genera melodía sintética)
       musicaURL: "",
 
-      // 3. GIFS ANIMADOS FLOTANTES EN EL ESPACIO 3D
-      gif: [
-        "imagenes/1.gif",
-        "imagenes/2.gif",
-        "imagenes/3.gif",
-        "imagenes/4.gif",
-        "imagenes/5.gif",
-        "imagenes/6.gif",
-        "imagenes/7.gif",
-        "imagenes/8.gif",
-        "imagenes/9.gif",
-        "imagenes/10.gif",
-        "imagenes/11.gif",
-        "imagenes/12.gif",
-        "imagenes/13.gif",
-        "imagenes/14.gif",
-        "imagenes/15.gif"
+      // 3. VIDEOS ANIMADOS FLOTANTES EN EL ESPACIO 3D
+      videos: [
+        "imagenes/1.mp4",
+        "imagenes/2.mp4",
+        "imagenes/3.mp4",
+        "imagenes/4.mp4",
+        "imagenes/5.mp4",
+        "imagenes/6.mp4",
+        "imagenes/7.mp4",
+        "imagenes/8.mp4",
+        "imagenes/9.mp4",
+        "imagenes/10.mp4"
       ],
 
       // FOTOS ANIMADAS FLOTANTES EN EL ESPACIO 3D
@@ -284,32 +279,39 @@
     }
 
     /* =========================================================================
-     * CARGA DE GIFS ANIMADOS FLOTANTES EN EL ESPACIO 3D (CON GIFLER)
+     * CARGA DE VIDEOS ANIMADOS FLOTANTES EN EL ESPACIO 3D
      * ========================================================================= */
-    if (CONFIG.gif && CONFIG.gif.length > 0) {
-      CONFIG.gif.forEach((url, idx) => {
-        // Crear un canvas independiente para decodificar cada GIF
-        const gifCanvas = document.createElement('canvas');
-        const texture = new THREE.CanvasTexture(gifCanvas);
-        
-        // Cargar el GIF y actualizar los fotogramas en tiempo real
-        gifler(url).get((anim) => {
-          anim.animateInCanvas(gifCanvas);
-          anim.onDrawFrame = () => {
-            texture.needsUpdate = true; // Notifica a Three.js que renderice el nuevo fotograma
-          };
+    if (CONFIG.videos && CONFIG.videos.length > 0) {
+      CONFIG.videos.forEach((url, idx) => {
+        // Crear elemento de video HTML
+        const video = document.createElement('video');
+        video.src = url;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.autoplay = true;
+
+        // Iniciar la reproducción del video
+        video.play().catch(() => {
+          // Reintento al tocar la pantalla si el navegador bloquea autoplay
+          window.addEventListener('pointerdown', () => video.play(), { once: true });
         });
 
-        // Crear geometría del plano en 3D
+        // Crear textura de video para Three.js
+        const videoTexture = new THREE.VideoTexture(video);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+
+        // Plano 3D para el video
         const planeGeo = new THREE.PlaneGeometry(16, 16);
         const planeMat = new THREE.MeshBasicMaterial({ 
-          map: texture, 
+          map: videoTexture, 
           side: THREE.DoubleSide, 
           transparent: true 
         });
         const mesh = new THREE.Mesh(planeGeo, planeMat);
 
-        // Posicionar cada GIF distribuido en órbita en la galaxia
+        // Posicionar los videos orbitando en la galaxia
         const angle = (idx / CONFIG.imagenesFlotantes.length) * Math.PI * 2;
         const rad = 65;
         mesh.position.set(Math.cos(angle) * rad, (Math.random() - 0.5) * 25, Math.sin(angle) * rad);
