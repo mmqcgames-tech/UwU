@@ -89,8 +89,8 @@
       // 2. MÚSICA DE FONDO (Si lo dejas vacío genera melodía sintética)
       musicaURL: "",
 
-      // 3. GIFS Y FOTOS ANIMADAS FLOTANTES EN EL ESPACIO 3D
-      imagenesFlotantes: [
+      // 3. GIFS ANIMADOS FLOTANTES EN EL ESPACIO 3D
+      gif: [
         "imagenes/1.gif",
         "imagenes/2.gif",
         "imagenes/3.gif",
@@ -106,6 +106,10 @@
         "imagenes/13.gif",
         "imagenes/14.gif",
         "imagenes/15.gif"
+      ],
+
+      // FOTOS ANIMADAS FLOTANTES EN EL ESPACIO 3D
+      imagenesFlotantes: [
       ],
 
       // 4. FRASES Y MENSAJES FLOTANTES EN EL ESPACIO 3D
@@ -282,8 +286,8 @@
     /* =========================================================================
      * CARGA DE GIFS ANIMADOS FLOTANTES EN EL ESPACIO 3D (CON GIFLER)
      * ========================================================================= */
-    if (CONFIG.imagenesFlotantes && CONFIG.imagenesFlotantes.length > 0) {
-      CONFIG.imagenesFlotantes.forEach((url, idx) => {
+    if (CONFIG.gif && CONFIG.gif.length > 0) {
+      CONFIG.gif.forEach((url, idx) => {
         // Crear un canvas independiente para decodificar cada GIF
         const gifCanvas = document.createElement('canvas');
         const texture = new THREE.CanvasTexture(gifCanvas);
