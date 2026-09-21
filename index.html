@@ -78,6 +78,23 @@
   <div id="webgl-container"></div>
 
   <script>
+    const listaGifs = [
+        "imagenes/1.gif",
+        "imagenes/2.gif",
+        "imagenes/3.gif",
+        "imagenes/4.gif",
+        "imagenes/5.gif",
+        "imagenes/6.gif",
+        "imagenes/7.gif",
+        "imagenes/8.gif",
+        "imagenes/9.gif",
+        "imagenes/10.gif",
+        "imagenes/11.gif",
+        "imagenes/12.gif",
+        "imagenes/13.gif",
+        "imagenes/14.gif",
+        "imagenes/15.gif"
+];
     /* =========================================================================
      *  SECTION DE CONFIGURACIÓN PERSONALIZABLE
      *  Puedes modificar los valores dentro de este objeto fácilmente.
@@ -96,23 +113,6 @@
 
       // 3. IMÁGENES FLOTANTES EN EL ESPACIO 3D
       // Agrega aquí enlaces a fotos/imágenes que quieras que se muestren flotando.
-      imagenesFlotantes: [
-        "imagenes/1.gif",
-        "imagenes/2.gif",
-        "imagenes/3.gif",
-        "imagenes/4.gif",
-        "imagenes/5.gif",
-        "imagenes/6.gif",
-        "imagenes/7.gif",
-        "imagenes/8.gif",
-        "imagenes/9.gif",
-        "imagenes/10.gif",
-        "imagenes/11.gif",
-        "imagenes/12.gif",
-        "imagenes/13.gif",
-        "imagenes/14.gif",
-        "imagenes/15.gif"
-            ],
 
       // 4. FRASES Y MENSAJES FLOTANTES EN EL ESPACIO 3D
       // Textos luminosos que flotarán orbitando junto con las flores.
@@ -289,22 +289,31 @@
     /* =========================================================================
      *  IMÁGENES FLOTANTES EN EL ESPACIO 3D
      * ========================================================================= */
-    if (CONFIG.imagenesFlotantes && CONFIG.imagenesFlotantes.length > 0) {
-      const textureLoader = new THREE.TextureLoader();
-      CONFIG.imagenesFlotantes.forEach((url, idx) => {
-        textureLoader.load(url, (tex) => {
-          const planeGeo = new THREE.PlaneGeometry(16, 16);
-          const planeMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
-          const mesh = new THREE.Mesh(planeGeo, planeMat);
+    listaGifs.forEach((url, idx) => {
+      const canvas = document.createElement('canvas');
+      const texture = new THREE.CanvasTexture(canvas);
 
-          const angle = (idx / CONFIG.imagenesFlotantes.length) * Math.PI * 2 + 0.5;
-          const rad = 65;
-          mesh.position.set(Math.cos(angle) * rad, (Math.random() - 0.5) * 15, Math.sin(angle) * rad);
-          mesh.lookAt(0, 0, 0);
-          scene.add(mesh);
-        });
+  // Gifler dibuja cada fotograma del GIF en el canvas en tiempo real
+      gifler(url).get((a) => {
+        a.animateInCanvas(canvas);
+        a.onDrawFrame = () => {
+          texture.needsUpdate = true; // Actualiza la textura en cada fotograma del GIF
+        };
       });
-    }
+
+      const planeGeo = new THREE.PlaneGeometry(20, 20);
+      const planeMat = new THREE.MeshBasicMaterial({ 
+        map: texture, 
+        side: THREE.DoubleSide, 
+        transparent: true 
+      });
+      const mesh = new THREE.Mesh(planeGeo, planeMat);
+
+      const angle = (idx / listaGifs.length) * Math.PI * 2;
+      mesh.position.set(Math.cos(angle) * 50, 10, Math.sin(angle) * 50);
+      mesh.lookAt(0, 0, 0);
+      scene.add(mesh);
+      });
 
     /* =========================================================================
      *  SISTEMA DE MÚSICA Y AUDIO (REPRODUCCIÓN AUTOMÁTICA)
