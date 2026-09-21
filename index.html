@@ -63,13 +63,12 @@
     }
   </style>
 
-  <!-- Librerías Three.js y OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/gifler@0.1.0/gifler.min.js"></script>
 </head>
 <body>
 
-  <!-- Título principal de la pantalla -->
   <div class="header-overlay">
     <h1 id="ui-title">UNIVERSO DE FLORES AMARILLAS</h1>
     <p id="ui-subtitle">Desliza el dedo o usa el mouse para explorar la galaxia</p>
@@ -78,7 +77,20 @@
   <div id="webgl-container"></div>
 
   <script>
-    const listaGifs = [
+    /* =========================================================================
+     * SECCIÓN DE CONFIGURACIÓN PERSONALIZABLE
+     * ========================================================================= */
+    const CONFIG = {
+      
+      // 1. TÍTULO Y SUBTÍTULO PRINCIPAL
+      titulo: "UNIVERSO DE FLORES AMARILLAS",
+      subtitulo: "UwU feliz dia de la amistad amigaaaa te quiero mucho UwU",
+
+      // 2. MÚSICA DE FONDO (Si lo dejas vacío genera melodía sintética)
+      musicaURL: "",
+
+      // 3. GIFS Y FOTOS ANIMADAS FLOTANTES EN EL ESPACIO 3D
+      imagenesFlotantes: [
         "imagenes/1.gif",
         "imagenes/2.gif",
         "imagenes/3.gif",
@@ -94,28 +106,9 @@
         "imagenes/13.gif",
         "imagenes/14.gif",
         "imagenes/15.gif"
-];
-    /* =========================================================================
-     *  SECTION DE CONFIGURACIÓN PERSONALIZABLE
-     *  Puedes modificar los valores dentro de este objeto fácilmente.
-     * ========================================================================= */
-    const CONFIG = {
-      
-      // 1. TÍTULO Y SUBTÍTULO PRINCIPAL
-      titulo: "UNIVERSO DE FLORES AMARILLAS",
-      subtitulo: "UwU feliz dia de la amistad amigaaaa te quiero mucho UwU",
-
-      // 2. MÚSICA DE FONDO
-      // Coloca aquí el enlace (URL) directo a tu archivo de audio en MP3/OGG.
-      // Ejemplo: "https://midominio.com/mi-cancion.mp3"
-      // Si se deja vacío (""), la aplicación generará una melodía ambiental integrada.
-      musicaURL: "",
-
-      // 3. IMÁGENES FLOTANTES EN EL ESPACIO 3D
-      // Agrega aquí enlaces a fotos/imágenes que quieras que se muestren flotando.
+      ],
 
       // 4. FRASES Y MENSAJES FLOTANTES EN EL ESPACIO 3D
-      // Textos luminosos que flotarán orbitando junto con las flores.
       mensajesFlotantes: [
         "Para ti 🌼",
         "Siempre floreciendo",
@@ -131,13 +124,13 @@
     };
 
     /* =========================================================================
-     *  INICIALIZACIÓN DE TEXTOS EN INTERFAZ
+     * INICIALIZACIÓN DE TEXTOS EN INTERFAZ
      * ========================================================================= */
     document.getElementById('ui-title').innerText = CONFIG.titulo;
     document.getElementById('ui-subtitle').innerText = CONFIG.subtitulo;
 
     /* =========================================================================
-     *  MOTOR 3D Y ESCENA (THREE.JS)
+     * MOTOR 3D Y ESCENA (THREE.JS)
      * ========================================================================= */
     const container = document.getElementById('webgl-container');
     const scene = new THREE.Scene();
@@ -163,7 +156,7 @@
     controls.minDistance = 10;
 
     /* =========================================================================
-     *  GENERADOR DE TEXTURA DE FLOR AMARILLA (CANVAS 2D -> TEXTURA 3D)
+     * GENERADOR DE TEXTURA DE FLOR AMARILLA (CANVAS 2D -> TEXTURA 3D)
      * ========================================================================= */
     function createFlowerTexture() {
       const canvas = document.createElement('canvas');
@@ -204,7 +197,7 @@
     const flowerTexture = createFlowerTexture();
 
     /* =========================================================================
-     *  CREACIÓN DE PARTICULAS Y FLORES DE LA GALAXIA
+     * CREACIÓN DE PARTÍCULAS Y FLORES DE LA GALAXIA
      * ========================================================================= */
     const count = CONFIG.cantidadFlores;
     const geometry = new THREE.BufferGeometry();
@@ -254,7 +247,7 @@
     scene.add(galaxy);
 
     /* =========================================================================
-     *  MENSAJES Y TEXTOS FLOTANTES EN EL ESPACIO 3D
+     * MENSAJES Y TEXTOS FLOTANTES EN EL ESPACIO 3D
      * ========================================================================= */
     function createTextSprite(text) {
       const canvas = document.createElement('canvas');
@@ -287,36 +280,43 @@
     }
 
     /* =========================================================================
-     *  IMÁGENES FLOTANTES EN EL ESPACIO 3D
+     * CARGA DE GIFS ANIMADOS FLOTANTES EN EL ESPACIO 3D (CON GIFLER)
      * ========================================================================= */
-    listaGifs.forEach((url, idx) => {
-      const canvas = document.createElement('canvas');
-      const texture = new THREE.CanvasTexture(canvas);
+    if (CONFIG.imagenesFlotantes && CONFIG.imagenesFlotantes.length > 0) {
+      CONFIG.imagenesFlotantes.forEach((url, idx) => {
+        // Crear un canvas independiente para decodificar cada GIF
+        const gifCanvas = document.createElement('canvas');
+        const texture = new THREE.CanvasTexture(gifCanvas);
+        
+        // Cargar el GIF y actualizar los fotogramas en tiempo real
+        gifler(url).get((anim) => {
+          anim.animateInCanvas(gifCanvas);
+          anim.onDrawFrame = () => {
+            texture.needsUpdate = true; // Notifica a Three.js que renderice el nuevo fotograma
+          };
+        });
 
-  // Gifler dibuja cada fotograma del GIF en el canvas en tiempo real
-      gifler(url).get((a) => {
-        a.animateInCanvas(canvas);
-        a.onDrawFrame = () => {
-          texture.needsUpdate = true; // Actualiza la textura en cada fotograma del GIF
-        };
-      });
+        // Crear geometría del plano en 3D
+        const planeGeo = new THREE.PlaneGeometry(16, 16);
+        const planeMat = new THREE.MeshBasicMaterial({ 
+          map: texture, 
+          side: THREE.DoubleSide, 
+          transparent: true 
+        });
+        const mesh = new THREE.Mesh(planeGeo, planeMat);
 
-      const planeGeo = new THREE.PlaneGeometry(20, 20);
-      const planeMat = new THREE.MeshBasicMaterial({ 
-        map: texture, 
-        side: THREE.DoubleSide, 
-        transparent: true 
-      });
-      const mesh = new THREE.Mesh(planeGeo, planeMat);
+        // Posicionar cada GIF distribuido en órbita en la galaxia
+        const angle = (idx / CONFIG.imagenesFlotantes.length) * Math.PI * 2;
+        const rad = 65;
+        mesh.position.set(Math.cos(angle) * rad, (Math.random() - 0.5) * 25, Math.sin(angle) * rad);
+        mesh.lookAt(0, 0, 0);
 
-      const angle = (idx / listaGifs.length) * Math.PI * 2;
-      mesh.position.set(Math.cos(angle) * 50, 10, Math.sin(angle) * 50);
-      mesh.lookAt(0, 0, 0);
-      scene.add(mesh);
+        scene.add(mesh);
       });
+    }
 
     /* =========================================================================
-     *  SISTEMA DE MÚSICA Y AUDIO (REPRODUCCIÓN AUTOMÁTICA)
+     * SISTEMA DE MÚSICA Y AUDIO (REPRODUCCIÓN AUTOMÁTICA)
      * ========================================================================= */
     let audioContext = null;
     let customAudio = null;
@@ -388,7 +388,7 @@
     }, { once: true });
 
     /* =========================================================================
-     *  ANIMACIÓN CONTINUA Y RENDERIZADO
+     * ANIMACIÓN CONTINUA Y RENDERIZADO
      * ========================================================================= */
     const clock = new THREE.Clock();
 
